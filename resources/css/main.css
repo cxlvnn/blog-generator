@@ -46,8 +46,14 @@ a {
   border-radius: 10px;
   padding: 2rem;
   flex: 1;
+  max-height: 100%;
+  min-height: 50dvh;
   background-color: #333333;
   margin: 3rem 0;
+}
+
+.back-button {
+  margin-bottom: 10rem;
 }
 
 .date {
