@@ -4,8 +4,8 @@ import json
 HOST = "localhost"
 PORT = 8080
 
-with open("storage/blog-1.json", "r") as file:
-    blog_data = json.load(file)
+with open("storage/blogs.json", "r") as file:
+    blogs = json.load(file)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -20,13 +20,30 @@ class Handler(BaseHTTPRequestHandler):
             case "/":
                 with open("resources/views/index.html", "r") as file:
                     resp = file.read()
+                    with open("resources/views/blog/index.html") as file:
+                        blog_index = file.read()
+                        resp = resp.replace("^app^", blog_index)
+                        blogs_template = "<ul>"
+                        for blog in blogs:
+                            blogs_template += f"""
+                                                <li>
+                                                <a href="/blog/{blog["id"]}">{blog["title"]}
+                                                </a>
+                                                <p>{blog["date"]}</p>
+                                                </li>
+                                                """
+                        blogs_template += "</ul>"
+                        resp = resp.replace("^blogs^", blogs_template)
+                    with open("resources/css/main.css") as file:
+                        style = file.read()
+                        resp = resp.replace("^mystyle^", style)
                 self.wfile.write(bytes(resp, "utf-8"))
             case "/blog":
                 with open("resources/views/blog/show.html", "r") as file:
                     resp = file.read()
-                    resp = resp.replace("^title^", blog_data["title"])
-                    resp = resp.replace("^content^", blog_data["content"])
-                    resp = resp.replace("^date^", blog_data["createdAt"])
+                    resp = resp.replace("^title^", blogs["title"])
+                    resp = resp.replace("^content^", blogs["content"])
+                    resp = resp.replace("^date^", blogs["createdAt"])
                 self.wfile.write(bytes(resp, "utf-8"))
             case _:
                 resp = b"Not Found"
