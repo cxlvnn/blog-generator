@@ -10,14 +10,19 @@ with open("storage/blogs.json", "r") as file:
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
 
         path = self.path
 
         match path:
             case "/":
+                self.send_response(301)
+                self.send_header("Location", "/blogs")
+                self.end_headers()
+            case "/blogs":
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+
                 with open("resources/views/index.html", "r") as file:
                     resp = file.read()
                     with open("resources/views/blog/index.html") as file:
@@ -38,16 +43,11 @@ class Handler(BaseHTTPRequestHandler):
                         style = file.read()
                         resp = resp.replace("^mystyle^", style)
                 self.wfile.write(bytes(resp, "utf-8"))
-            case "/blog":
-                with open("resources/views/blog/show.html", "r") as file:
-                    resp = file.read()
-                    resp = resp.replace("^title^", blogs["title"])
-                    resp = resp.replace("^content^", blogs["content"])
-                    resp = resp.replace("^date^", blogs["createdAt"])
-                self.wfile.write(bytes(resp, "utf-8"))
             case _:
-                resp = b"Not Found"
-                self.wfile.write(resp)
+                path_list = path.split("/")
+                if len(path_list) == 3:
+                    id = path_list[2]
+                    self.wfile.write(bytes(id, "utf-8"))
 
 
 def run():
