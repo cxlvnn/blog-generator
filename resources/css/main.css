@@ -6,6 +6,7 @@
 body {
   background-color: #272727;
   color: #f1f1f1;
+  font-family: sans-serif;
 }
 
 ul {
@@ -20,7 +21,7 @@ a {
   display: flex;
   align-items: center;
   margin: auto;
-  height: 100vh;
+  min-height: 100dvh;
   width: 100vh;
 }
 
@@ -39,4 +40,22 @@ a {
   display: flex;
   justify-content: space-between;
   margin: 1cap 0;
+}
+
+.blog-container {
+  border-radius: 10px;
+  padding: 2rem;
+  flex: 1;
+  background-color: #333333;
+  margin: 3rem 0;
+}
+
+.date {
+  color: #999;
+  margin: 1rem 0;
+}
+
+.content {
+  font-size: 1rem;
+  font-weight: bold;
 }
