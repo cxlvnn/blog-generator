@@ -25,6 +25,12 @@ def return_not_found(handler: BaseHTTPRequestHandler):
     handler.wfile.write(bytes(app, "utf-8"))
 
 
+def default_response(handler: BaseHTTPRequestHandler):
+    handler.send_response(200)
+    handler.send_header("Content-type", "text/html")
+    handler.end_headers()
+
+
 with open("storage/blogs.json", "r") as file:
     blogs = json.load(file)
 
@@ -40,9 +46,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("Location", "/blogs")
                 self.end_headers()
             case ["blogs"]:
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
+                default_response(self)
 
                 with open("resources/views/index.html", "r") as file:
                     app = file.read()
@@ -70,12 +74,12 @@ class Handler(BaseHTTPRequestHandler):
                 except ValueError:
                     return_not_found(self)
 
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
+                default_response(self)
 
+                found = False
                 for blog in blogs:
                     if blog_id == blog["id"]:
+                        found = True
                         with open("resources/views/index.html", "r") as file:
                             app = file.read()
 
@@ -90,6 +94,9 @@ class Handler(BaseHTTPRequestHandler):
 
                         app = app.replace("^app^", blog_show)
                         self.wfile.write(bytes(app, "utf-8"))
+
+                if not found:
+                    return_not_found(self)
 
             case ["admin"]:
                 self.send_response(200)
@@ -108,8 +115,15 @@ class Handler(BaseHTTPRequestHandler):
                                                 <a href="/blogs/{blog["id"]}">{blog["title"]}
                                                 </a>
                                                 <div class="action-buttons-container">
+
+                                                <a href="/blogs/edit/{blog["id"]}">
                                                 <button class="edit-button">Edit</button>
+                                                </a>
+
+                                                <a href="/blogs/delete/{blog["id"]}">
                                                 <button class="delete-button">Delete</button>
+                                                </a>
+
                                                 </div>
                                                 </li>
                                                 """
@@ -119,6 +133,22 @@ class Handler(BaseHTTPRequestHandler):
                         style = file.read()
                         app = app.replace("^mystyle^", style)
                 self.wfile.write(bytes(app, "utf-8"))
+            case ["blogs", "edit", blog_id]:
+                try:
+                    blog_id = int(blog_id)
+                except ValueError:
+                    return_not_found(self)
+
+                found = False
+                for blog in blogs:
+                    if blog_id == blog["id"]:
+                        found = True
+                        default_response(self)
+                        self.wfile.write(bytes(blog["title"], "utf-8"))
+
+                if not found:
+                    return_not_found(self)
+
             case _:
                 return_not_found(self)
 
