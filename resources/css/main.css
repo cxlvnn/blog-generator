@@ -9,6 +9,19 @@ body {
   font-family: sans-serif;
 }
 
+input,
+textarea {
+  padding: 2px 4px;
+}
+
+button {
+  padding: 2px 4px;
+}
+
+button:hover {
+  cursor: pointer;
+}
+
 ul {
   list-style: none;
 }

@@ -151,8 +151,13 @@ class Handler(BaseHTTPRequestHandler):
                         blog_edit = load_page("resources/views/blog/edit.html")
 
                         app = load_app()
-                        app = app.replace("^app^", blog_edit)
 
+                        blog_edit = blog_edit.replace("^action_url^", f"/blogs/edit/1")
+                        blog_edit = blog_edit.replace("^title^", blog["title"])
+                        blog_edit = blog_edit.replace("^content^", blog["content"])
+                        blog_edit = blog_edit.replace("^date^", blog["date"])
+
+                        app = app.replace("^app^", blog_edit)
                         self.wfile.write(bytes(app, "utf-8"))
 
                 if not found:
