@@ -45,6 +45,13 @@ with open("storage/blogs.json", "r") as file:
     blogs = json.load(file)
 
 
+def load_page(path_to_page):
+    with open(path_to_page, "r") as file:
+        page = file.read()
+
+    return page
+
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
 
@@ -60,19 +67,18 @@ class Handler(BaseHTTPRequestHandler):
 
                 app = load_app()
 
-                with open("resources/views/blog/index.html") as file:
-                    blog_index = file.read()
-                    app = app.replace("^app^", blog_index)
-                    blogs_template = "<ul>"
-                    for blog in blogs:
-                        blogs_template += f"""
-                                            <li>
-                                                <a href="/blogs/{blog["id"]}">{blog["title"]}</a>
-                                                <p>{blog["date"]}</p>
-                                            </li>
-                                            """
-                    blogs_template += "</ul>"
-                    app = app.replace("^blogs^", blogs_template)
+                blog_index = load_page("resources/views/blog/index.html")
+                app = app.replace("^app^", blog_index)
+                blogs_template = "<ul>"
+                for blog in blogs:
+                    blogs_template += f"""
+                                        <li>
+                                            <a href="/blogs/{blog["id"]}">{blog["title"]}</a>
+                                            <p>{blog["date"]}</p>
+                                        </li>
+                                        """
+                blogs_template += "</ul>"
+                app = app.replace("^blogs^", blogs_template)
 
                 self.wfile.write(bytes(app, "utf-8"))
             case ["blogs", blog_id]:
@@ -89,11 +95,10 @@ class Handler(BaseHTTPRequestHandler):
                         found = True
                         app = load_app()
 
-                        with open("resources/views/blog/show.html", "r") as file:
-                            blog_show = file.read()
-                            blog_show = blog_show.replace("^title^", blog["title"])
-                            blog_show = blog_show.replace("^content^", blog["content"])
-                            blog_show = blog_show.replace("^date^", blog["date"])
+                        blog_show = load_page("resources/views/blog/show.html")
+                        blog_show = blog_show.replace("^title^", blog["title"])
+                        blog_show = blog_show.replace("^content^", blog["content"])
+                        blog_show = blog_show.replace("^date^", blog["date"])
 
                         app = app.replace("^app^", blog_show)
                         self.wfile.write(bytes(app, "utf-8"))
@@ -107,30 +112,28 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
 
                 app = load_app()
-                with open("resources/views/auth/admin.html") as file:
-                    blog_index = file.read()
-                    app = app.replace("^app^", blog_index)
-                    blogs_template = "<ul>"
-                    for blog in blogs:
-                        blogs_template += f"""
-                                            <li>
-                                            <a href="/blogs/{blog["id"]}">{blog["title"]}
-                                            </a>
+                admin_page = load_page("resources/views/auth/admin.html")
+                app = app.replace("^app^", admin_page)
+                blogs_template = "<ul>"
+                for blog in blogs:
+                    blogs_template += f"""
+                                        <li>
+                                            <a href="/blogs/{blog["id"]}">{blog["title"]}</a>
                                             <div class="action-buttons-container">
 
-                                            <a href="/blogs/edit/{blog["id"]}">
-                                            <button class="edit-button">Edit</button>
-                                            </a>
+                                                <a href="/blogs/edit/{blog["id"]}">
+                                                    <button class="edit-button">Edit</button>
+                                                </a>
 
-                                            <a href="/blogs/delete/{blog["id"]}">
-                                            <button class="delete-button">Delete</button>
-                                            </a>
+                                                <a href="/blogs/delete/{blog["id"]}">
+                                                    <button class="delete-button">Delete</button>
+                                                </a>
 
                                             </div>
-                                            </li>
+                                        </li>
                                             """
-                    blogs_template += "</ul>"
-                    app = app.replace("^blogs^", blogs_template)
+                blogs_template += "</ul>"
+                app = app.replace("^blogs^", blogs_template)
 
                 self.wfile.write(bytes(app, "utf-8"))
             case ["blogs", "edit", blog_id]:
@@ -145,8 +148,7 @@ class Handler(BaseHTTPRequestHandler):
                         found = True
                         default_response(self)
 
-                        with open("resources/views/blog/edit.html", "r") as file:
-                            blog_edit = file.read()
+                        blog_edit = load_page("resources/views/blog/edit.html")
 
                         app = load_app()
                         app = app.replace("^app^", blog_edit)
