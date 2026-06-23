@@ -31,6 +31,16 @@ def default_response(handler: BaseHTTPRequestHandler):
     handler.end_headers()
 
 
+def load_app():
+    with open("resources/views/index.html", "r") as file:
+        app = file.read()
+    with open("resources/css/main.css", "r") as file:
+        style = file.read()
+        app = app.replace("^mystyle^", style)
+
+    return app
+
+
 with open("storage/blogs.json", "r") as file:
     blogs = json.load(file)
 
@@ -48,25 +58,22 @@ class Handler(BaseHTTPRequestHandler):
             case ["blogs"]:
                 default_response(self)
 
-                with open("resources/views/index.html", "r") as file:
-                    app = file.read()
-                    with open("resources/views/blog/index.html") as file:
-                        blog_index = file.read()
-                        app = app.replace("^app^", blog_index)
-                        blogs_template = "<ul>"
-                        for blog in blogs:
-                            blogs_template += f"""
-                                                <li>
-                                                <a href="/blogs/{blog["id"]}">{blog["title"]}
-                                                </a>
+                app = load_app()
+
+                with open("resources/views/blog/index.html") as file:
+                    blog_index = file.read()
+                    app = app.replace("^app^", blog_index)
+                    blogs_template = "<ul>"
+                    for blog in blogs:
+                        blogs_template += f"""
+                                            <li>
+                                                <a href="/blogs/{blog["id"]}">{blog["title"]}</a>
                                                 <p>{blog["date"]}</p>
-                                                </li>
-                                                """
-                        blogs_template += "</ul>"
-                        app = app.replace("^blogs^", blogs_template)
-                    with open("resources/css/main.css") as file:
-                        style = file.read()
-                        app = app.replace("^mystyle^", style)
+                                            </li>
+                                            """
+                    blogs_template += "</ul>"
+                    app = app.replace("^blogs^", blogs_template)
+
                 self.wfile.write(bytes(app, "utf-8"))
             case ["blogs", blog_id]:
                 try:
@@ -80,11 +87,7 @@ class Handler(BaseHTTPRequestHandler):
                 for blog in blogs:
                     if blog_id == blog["id"]:
                         found = True
-                        with open("resources/views/index.html", "r") as file:
-                            app = file.read()
-
-                        with open("resources/css/main.css", "r") as file:
-                            app = app.replace("^mystyle^", file.read())
+                        app = load_app()
 
                         with open("resources/views/blog/show.html", "r") as file:
                             blog_show = file.read()
@@ -103,35 +106,32 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
 
-                with open("resources/views/index.html", "r") as file:
-                    app = file.read()
-                    with open("resources/views/auth/admin.html") as file:
-                        blog_index = file.read()
-                        app = app.replace("^app^", blog_index)
-                        blogs_template = "<ul>"
-                        for blog in blogs:
-                            blogs_template += f"""
-                                                <li>
-                                                <a href="/blogs/{blog["id"]}">{blog["title"]}
-                                                </a>
-                                                <div class="action-buttons-container">
+                app = load_app()
+                with open("resources/views/auth/admin.html") as file:
+                    blog_index = file.read()
+                    app = app.replace("^app^", blog_index)
+                    blogs_template = "<ul>"
+                    for blog in blogs:
+                        blogs_template += f"""
+                                            <li>
+                                            <a href="/blogs/{blog["id"]}">{blog["title"]}
+                                            </a>
+                                            <div class="action-buttons-container">
 
-                                                <a href="/blogs/edit/{blog["id"]}">
-                                                <button class="edit-button">Edit</button>
-                                                </a>
+                                            <a href="/blogs/edit/{blog["id"]}">
+                                            <button class="edit-button">Edit</button>
+                                            </a>
 
-                                                <a href="/blogs/delete/{blog["id"]}">
-                                                <button class="delete-button">Delete</button>
-                                                </a>
+                                            <a href="/blogs/delete/{blog["id"]}">
+                                            <button class="delete-button">Delete</button>
+                                            </a>
 
-                                                </div>
-                                                </li>
-                                                """
-                        blogs_template += "</ul>"
-                        app = app.replace("^blogs^", blogs_template)
-                    with open("resources/css/main.css") as file:
-                        style = file.read()
-                        app = app.replace("^mystyle^", style)
+                                            </div>
+                                            </li>
+                                            """
+                    blogs_template += "</ul>"
+                    app = app.replace("^blogs^", blogs_template)
+
                 self.wfile.write(bytes(app, "utf-8"))
             case ["blogs", "edit", blog_id]:
                 try:
@@ -144,7 +144,14 @@ class Handler(BaseHTTPRequestHandler):
                     if blog_id == blog["id"]:
                         found = True
                         default_response(self)
-                        self.wfile.write(bytes(blog["title"], "utf-8"))
+
+                        with open("resources/views/blog/edit.html", "r") as file:
+                            blog_edit = file.read()
+
+                        app = load_app()
+                        app = app.replace("^app^", blog_edit)
+
+                        self.wfile.write(bytes(app, "utf-8"))
 
                 if not found:
                     return_not_found(self)
