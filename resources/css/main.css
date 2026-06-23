@@ -66,3 +66,45 @@ a {
   font-size: 1rem;
   font-weight: bold;
 }
+
+.admin-blogs-container {
+  margin: 8px 0;
+  background-color: #333333;
+  padding: 40px 25px;
+  border-radius: 10px;
+  flex: 2;
+}
+
+.admin-blogs-container h1 {
+  margin-bottom: 2rem;
+}
+
+.admin-blogs ul {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-blogs ul li {
+  display: flex;
+  row-gap: 10px;
+  justify-content: space-between;
+}
+
+.action-buttons-container button {
+  padding: 3px 8px;
+  border: none;
+  border-radius: 2px;
+}
+
+.action-buttons-container button:hover {
+  cursor: pointer;
+}
+
+.delete-button {
+  background-color: tomato;
+}
+
+.edit-button {
+  background-color: aqua;
+}
