@@ -53,6 +53,14 @@ def load_page(path_to_page):
 
 
 class Handler(BaseHTTPRequestHandler):
+
+    def do_POST(self):
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+
+        self.wfile.write(b"hello")
+
     def do_GET(self):
 
         path = [s for s in self.path.split("/") if s]
@@ -106,7 +114,26 @@ class Handler(BaseHTTPRequestHandler):
                 if not found:
                     return_not_found(self)
 
+            case ["login"]:
+                default_response(self)
+
+                login_page = load_page("resources/views/auth/login.html")
+
+                app = load_app()
+
+                app = app.replace("^app^", login_page)
+
+                self.wfile.write(bytes(app, "utf-8"))
+
             case ["admin"]:
+
+                auth_header = self.headers.get("Authorization")
+
+                if auth_header is None:
+                    self.send_response(302)
+                    self.send_header("Location", "/login")
+                    self.end_headers()
+
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
