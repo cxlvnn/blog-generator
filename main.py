@@ -1,8 +1,29 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+import os
+import urllib.parse
 
 HOST = "localhost"
 PORT = 8080
+
+
+def load_env(file_path=".env"):
+    if not os.path.exists(file_path):
+        return
+
+    with open(file_path, "r") as file:
+        for line in file:
+            line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            if "=" in line:
+                key, value = line.split("=", 1)
+
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+
+                os.environ[key] = value
 
 
 def return_not_found(handler: BaseHTTPRequestHandler):
@@ -55,11 +76,28 @@ def load_page(path_to_page):
 class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
-        self.send_response(200)
-        self.send_header("Content-type", "application/json")
-        self.end_headers()
+        path = [s for s in self.path.split("/") if s]
 
-        self.wfile.write(b"hello")
+        match path:
+            case ["login"]:
+                default_response(self)
+
+                content_length = int(self.headers.get("Content-Length", 0))
+
+                body = self.rfile.read(content_length)
+                request_body = urllib.parse.parse_qs(body.decode("utf-8"))
+                username = request_body["username"][0]
+                password = request_body["password"][0]
+
+                if username == os.getenv("ADMIN_USERNAME") and password == os.getenv(
+                    "ADMIN_PASSWORD"
+                ):
+                    print("pwned")
+                else:
+                    print("not pwned")
+
+            case _:
+                return_not_found(self)
 
     def do_GET(self):
 
@@ -133,6 +171,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_response(302)
                     self.send_header("Location", "/login")
                     self.end_headers()
+                    return
 
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
@@ -200,4 +239,5 @@ def run():
     httpd.serve_forever()
 
 
+load_env()
 run()
