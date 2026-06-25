@@ -104,6 +104,11 @@ a {
   justify-content: space-between;
 }
 
+.edit,
+.delete {
+  text-decoration: none;
+}
+
 .action-buttons-container button {
   padding: 3px 8px;
   border: none;

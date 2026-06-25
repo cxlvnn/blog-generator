@@ -1,10 +1,15 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import http.cookies
 import json
 import os
 import urllib.parse
+import base64
+import uuid
 
 HOST = "localhost"
 PORT = 8080
+
+SESSIONS = {}
 
 
 def load_env(file_path=".env"):
@@ -80,8 +85,6 @@ class Handler(BaseHTTPRequestHandler):
 
         match path:
             case ["login"]:
-                default_response(self)
-
                 content_length = int(self.headers.get("Content-Length", 0))
 
                 body = self.rfile.read(content_length)
@@ -92,9 +95,21 @@ class Handler(BaseHTTPRequestHandler):
                 if username == os.getenv("ADMIN_USERNAME") and password == os.getenv(
                     "ADMIN_PASSWORD"
                 ):
-                    print("pwned")
+                    session_id = str(uuid.uuid4())
+                    SESSIONS[session_id] = username
+                    self.send_response(303)
+                    self.send_header(
+                        "Set-Cookie", f"session-id={session_id}; HttpOnly; Path=/"
+                    )
+                    self.send_header("Location", "/admin")
+                    self.end_headers()
                 else:
-                    print("not pwned")
+                    self.send_response(401)
+                    self.send_header("Content-type", "text/html")
+                    self.end_headers()
+                    self.wfile.write(
+                        b"<h1>Wrong credentials</h1><br><a href='/login'>try again</a>"
+                    )
 
             case _:
                 return_not_found(self)
@@ -165,9 +180,13 @@ class Handler(BaseHTTPRequestHandler):
 
             case ["admin"]:
 
-                auth_header = self.headers.get("Authorization")
+                cookie_header = self.headers.get("Cookie")
+                cookie = http.cookies.SimpleCookie(cookie_header)
 
-                if auth_header is None:
+                session_cookie = cookie.get("session-id")
+                session_id = session_cookie.value if session_cookie else None
+
+                if session_id not in SESSIONS:
                     self.send_response(302)
                     self.send_header("Location", "/login")
                     self.end_headers()
@@ -187,11 +206,11 @@ class Handler(BaseHTTPRequestHandler):
                                             <a href="/blogs/{blog["id"]}">{blog["title"]}</a>
                                             <div class="action-buttons-container">
 
-                                                <a href="/blogs/edit/{blog["id"]}">
+                                                <a class="edit" href="/blogs/edit/{blog["id"]}">
                                                     <button class="edit-button">Edit</button>
                                                 </a>
 
-                                                <a href="/blogs/delete/{blog["id"]}">
+                                                <a class="delete" href="/blogs/delete/{blog["id"]}">
                                                     <button class="delete-button">Delete</button>
                                                 </a>
 
