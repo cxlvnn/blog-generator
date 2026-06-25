@@ -1,9 +1,9 @@
+from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import http.cookies
 import json
 import os
 import urllib.parse
-import base64
 import uuid
 
 HOST = "localhost"
@@ -67,15 +67,15 @@ def load_app():
     return app
 
 
-with open("storage/blogs.json", "r") as file:
-    blogs = json.load(file)
-
-
 def load_page(path_to_page):
     with open(path_to_page, "r") as file:
         page = file.read()
 
     return page
+
+
+with open("storage/blogs.json", "r") as file:
+    blogs = json.load(file)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -110,6 +110,30 @@ class Handler(BaseHTTPRequestHandler):
                     self.wfile.write(
                         b"<h1>Wrong credentials</h1><br><a href='/login'>try again</a>"
                     )
+
+            case ["blogs", "edit", blog_id]:
+                try:
+                    blog_id = int(blog_id)
+                except ValueError:
+                    return_not_found(self)
+                content_length = int(self.headers.get("Content-Length", 0))
+
+                body = self.rfile.read(content_length)
+                request_body = urllib.parse.parse_qs(body.decode("utf-8"))
+                title = request_body["title"][0]
+                content = request_body["content"][0]
+                date = request_body["date"][0]
+
+                for blog in blogs:
+                    if blog["id"] == blog_id:
+                        blog["title"] = title
+                        blog["content"] = content
+                        blog["date"] = date
+                with open("storage/blogs.json", "w") as file:
+                    json.dump(blogs, file, indent=4)
+
+                default_response(self)
+                self.wfile.write(bytes(title, "utf-8"))
 
             case _:
                 return_not_found(self)
@@ -237,7 +261,9 @@ class Handler(BaseHTTPRequestHandler):
 
                         app = load_app()
 
-                        blog_edit = blog_edit.replace("^action_url^", f"/blogs/edit/1")
+                        blog_edit = blog_edit.replace(
+                            "^action_url^", f"/blogs/edit/{blog_id}"
+                        )
                         blog_edit = blog_edit.replace("^title^", blog["title"])
                         blog_edit = blog_edit.replace("^content^", blog["content"])
                         blog_edit = blog_edit.replace("^date^", blog["date"])
