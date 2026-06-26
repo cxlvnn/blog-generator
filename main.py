@@ -38,18 +38,15 @@ def return_not_found(handler: BaseHTTPRequestHandler):
     handler.send_header("Content-type", "text/html")
     handler.end_headers()
 
-    with open("resources/views/index.html", "r") as file:
-        app = file.read()
-        with open("resources/css/main.css", "r") as file:
-            app = app.replace("^mystyle^", file.read())
-        app = app.replace(
-            "^app^",
-            """
-                          <div>
-                          <h1>404 - Not Found</h1>
-                          </div>
-                          """,
-        )
+    app = load_app()
+    app = app.replace(
+        "^app^",
+        """
+            <div>
+                <h1>404 - Not Found</h1>
+            </div>
+        """,
+    )
     handler.wfile.write(bytes(app, "utf-8"))
 
 
@@ -114,6 +111,7 @@ class Handler(BaseHTTPRequestHandler):
                     blog_id = int(blog_id)
                 except ValueError:
                     return_not_found(self)
+                    return
                 content_length = int(self.headers.get("Content-Length", 0))
 
                 body = self.rfile.read(content_length)
@@ -164,17 +162,27 @@ class Handler(BaseHTTPRequestHandler):
                 app = app.replace("^blogs^", blogs_template)
 
                 self.wfile.write(bytes(app, "utf-8"))
+            case ["blogs", "create"]:
+                default_response(self)
+
+                app = load_app()
+                create_page = load_page("resources/views/blog/create.html")
+
+                app = app.replace("^app^", create_page)
+
+                self.wfile.write(bytes(app, "utf-8"))
+
             case ["blogs", blog_id]:
                 try:
                     blog_id = int(blog_id)
                 except ValueError:
                     return_not_found(self)
-
-                default_response(self)
+                    return
 
                 found = False
                 for blog in blogs:
                     if blog_id == blog["id"]:
+                        default_response(self)
                         found = True
                         app = load_app()
 
@@ -188,6 +196,7 @@ class Handler(BaseHTTPRequestHandler):
 
                 if not found:
                     return_not_found(self)
+                    return
 
             case ["login"]:
                 default_response(self)
@@ -255,6 +264,7 @@ class Handler(BaseHTTPRequestHandler):
                     blog_id = int(blog_id)
                 except ValueError:
                     return_not_found(self)
+                    return
 
                 found = False
                 for blog in blogs:
@@ -278,9 +288,11 @@ class Handler(BaseHTTPRequestHandler):
 
                 if not found:
                     return_not_found(self)
+                    return
 
             case _:
                 return_not_found(self)
+                return
 
     def do_DELETE(self):
         path = [s for s in self.path.split("/") if s]
@@ -291,6 +303,7 @@ class Handler(BaseHTTPRequestHandler):
                     blog_id = int(blog_id)
                 except ValueError:
                     return_not_found(self)
+                    return
 
                 print(blog_id)
                 print(type(blog_id))

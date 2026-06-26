@@ -88,10 +88,6 @@ a {
   flex: 2;
 }
 
-.admin-blogs-container h1 {
-  margin-bottom: 2rem;
-}
-
 .admin-blogs ul {
   display: flex;
   flex-direction: column;
@@ -132,4 +128,11 @@ a {
 
 .edit-button {
   background-color: aqua;
+}
+
+.headline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
 }

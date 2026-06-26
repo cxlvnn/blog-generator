@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "id": 1,
+    "title": "neovim might be the best text editor",
+    "content": "Neovim could be the best text editor beacause I use neovim btw, in arch based os btw",
+    "date": "2026-06-12"
+  },
+  {
+    "id": 4,
+    "title": "so I tried vscode",
+    "content": "hello this is a blog",
+    "date": "2026-02-12"
+  },
+  {
+    "id": 5,
+    "title": "10 reasons for why you should stop using vscode",
+    "content": "hello this is a blog",
+    "date": "2026-08-19"
+  }
+]
+
