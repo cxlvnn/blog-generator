@@ -73,6 +73,20 @@ def load_page(path_to_page):
     return page
 
 
+def check_authenticated(handler: BaseHTTPRequestHandler):
+    cookie_header = handler.headers.get("Cookie")
+    cookie = http.cookies.SimpleCookie(cookie_header)
+
+    session_cookie = cookie.get("session-id")
+    session_id = session_cookie.value if session_cookie else None
+
+    if session_id not in SESSIONS:
+        handler.send_response(302)
+        handler.send_header("Location", "/login")
+        handler.end_headers()
+        return
+
+
 class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
@@ -105,6 +119,34 @@ class Handler(BaseHTTPRequestHandler):
                     self.wfile.write(
                         b"<h1>Wrong credentials</h1><br><a href='/login'>try again</a>"
                     )
+
+            case ["blogs"]:
+                content_length = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(content_length)
+                request_body = urllib.parse.parse_qs(body.decode("utf-8"))
+
+                try:
+                    last_id = blogs[len(blogs) - 1]["id"]
+                    print(last_id)
+                except Exception as _:
+                    last_id = -1
+
+                blog = {
+                    "id": last_id + 1,
+                    "title": request_body["title"][0],
+                    "content": request_body["content"][0],
+                    "date": request_body["date"][0],
+                }
+
+                blogs.append(blog)
+
+                if len(blogs) > 0:
+                    with open("storage/blogs.json", "w") as file:
+                        json.dump(blogs, file, indent=2)
+
+                self.send_response(302)
+                self.send_header("Location", f"/blogs/{blog["id"]}")
+                self.end_headers()
 
             case ["blogs", "edit", blog_id]:
                 try:
@@ -163,6 +205,8 @@ class Handler(BaseHTTPRequestHandler):
 
                 self.wfile.write(bytes(app, "utf-8"))
             case ["blogs", "create"]:
+                check_authenticated(self)
+
                 default_response(self)
 
                 app = load_app()
@@ -211,17 +255,7 @@ class Handler(BaseHTTPRequestHandler):
 
             case ["admin"]:
 
-                cookie_header = self.headers.get("Cookie")
-                cookie = http.cookies.SimpleCookie(cookie_header)
-
-                session_cookie = cookie.get("session-id")
-                session_id = session_cookie.value if session_cookie else None
-
-                if session_id not in SESSIONS:
-                    self.send_response(302)
-                    self.send_header("Location", "/login")
-                    self.end_headers()
-                    return
+                check_authenticated(self)
 
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
