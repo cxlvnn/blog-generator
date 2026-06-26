@@ -73,7 +73,7 @@ def load_page(path_to_page):
     return page
 
 
-def check_authenticated(handler: BaseHTTPRequestHandler):
+def authenticated(handler: BaseHTTPRequestHandler) -> bool:
     cookie_header = handler.headers.get("Cookie")
     cookie = http.cookies.SimpleCookie(cookie_header)
 
@@ -81,10 +81,9 @@ def check_authenticated(handler: BaseHTTPRequestHandler):
     session_id = session_cookie.value if session_cookie else None
 
     if session_id not in SESSIONS:
-        handler.send_response(302)
-        handler.send_header("Location", "/login")
-        handler.end_headers()
-        return
+        return False
+
+    return True
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -121,6 +120,12 @@ class Handler(BaseHTTPRequestHandler):
                     )
 
             case ["blogs"]:
+                if not authenticated(self):
+                    self.send_response(302)
+                    self.send_header("Location", "/login")
+                    self.end_headers()
+                    return
+
                 content_length = int(self.headers.get("Content-Length", 0))
                 body = self.rfile.read(content_length)
                 request_body = urllib.parse.parse_qs(body.decode("utf-8"))
@@ -140,9 +145,8 @@ class Handler(BaseHTTPRequestHandler):
 
                 blogs.append(blog)
 
-                if len(blogs) > 0:
-                    with open("storage/blogs.json", "w") as file:
-                        json.dump(blogs, file, indent=2)
+                with open("storage/blogs.json", "w") as file:
+                    json.dump(blogs, file, indent=2)
 
                 self.send_response(302)
                 self.send_header("Location", f"/blogs/{blog["id"]}")
@@ -170,8 +174,9 @@ class Handler(BaseHTTPRequestHandler):
                 with open("storage/blogs.json", "w") as file:
                     json.dump(blogs, file, indent=4)
 
-                default_response(self)
-                self.wfile.write(bytes(title, "utf-8"))
+                self.send_response(302)
+                self.send_header("Location", f"/blogs/{blog_id}")
+                self.end_headers()
 
             case _:
                 return_not_found(self)
@@ -205,7 +210,11 @@ class Handler(BaseHTTPRequestHandler):
 
                 self.wfile.write(bytes(app, "utf-8"))
             case ["blogs", "create"]:
-                check_authenticated(self)
+                if not authenticated(self):
+                    self.send_response(302)
+                    self.send_header("Location", "/login")
+                    self.end_headers()
+                    return
 
                 default_response(self)
 
@@ -255,7 +264,11 @@ class Handler(BaseHTTPRequestHandler):
 
             case ["admin"]:
 
-                check_authenticated(self)
+                if not authenticated(self):
+                    self.send_response(302)
+                    self.send_header("Location", "/login")
+                    self.end_headers()
+                    return
 
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
@@ -349,7 +362,9 @@ class Handler(BaseHTTPRequestHandler):
                 with open("storage/blogs.json", "w") as file:
                     json.dump(blogs, file, indent=4)
 
-                self.send_response(204)
+                self.send_response(302)
+                self.send_header("Location", "/admin")
+                self.end_headers()
             case _:
                 return_not_found(self)
 
