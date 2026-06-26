@@ -104,9 +104,12 @@ a {
   justify-content: space-between;
 }
 
-.edit,
-.delete {
+.edit {
   text-decoration: none;
+}
+
+.action-buttons-container {
+  display: flex;
 }
 
 .action-buttons-container button {

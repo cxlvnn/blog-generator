@@ -11,6 +11,9 @@ PORT = 8080
 
 SESSIONS = {}
 
+with open("storage/blogs.json", "r") as file:
+    blogs = json.load(file)
+
 
 def load_env(file_path=".env"):
     if not os.path.exists(file_path):
@@ -72,10 +75,6 @@ def load_page(path_to_page):
         page = file.read()
 
     return page
-
-
-with open("storage/blogs.json", "r") as file:
-    blogs = json.load(file)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -234,14 +233,15 @@ class Handler(BaseHTTPRequestHandler):
                                                     <button class="edit-button">Edit</button>
                                                 </a>
 
-                                                <a class="delete" href="/blogs/delete/{blog["id"]}">
-                                                    <button class="delete-button">Delete</button>
-                                                </a>
+                                                <form class="delete-form" action="/blogs/delete/{blog["id"]}">
+                                                    <button type="submit" class="delete-button">Delete</button>
+                                                </form>
 
                                             </div>
                                         </li>
                                             """
                 blogs_template += "</ul>"
+
                 app = app.replace("^blogs^", blogs_template)
 
                 self.wfile.write(bytes(app, "utf-8"))
@@ -274,6 +274,30 @@ class Handler(BaseHTTPRequestHandler):
                 if not found:
                     return_not_found(self)
 
+            case _:
+                return_not_found(self)
+
+    def do_DELETE(self):
+        path = [s for s in self.path.split("/") if s]
+
+        match path:
+            case ["blogs", "delete", blog_id]:
+                try:
+                    blog_id = int(blog_id)
+                except ValueError:
+                    return_not_found(self)
+
+                print(blog_id)
+                print(type(blog_id))
+
+                for blog in blogs:
+                    if blog_id == blog["id"]:
+                        blogs.remove(blog)
+
+                with open("storage/blogs.json", "w") as file:
+                    json.dump(blogs, file, indent=4)
+
+                self.send_response(204)
             case _:
                 return_not_found(self)
 

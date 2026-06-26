@@ -5,3 +5,18 @@
     ^blogs^
   </div>
 </div>
+
+<script>
+  document.querySelectorAll(".delete-form").forEach(form => {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      fetch(this.action, {method: 'DELETE', body: new FormData(this)}).then(response => {
+        if (response.status == 204) {
+          window.location.href = '/admin'
+        } else {
+          console.error('deletion failed')
+        }
+      }).catch(error => console.error('Error:', error));
+    });
+  });
+</script>
