@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import http.cookies
 import json
@@ -222,9 +221,13 @@ class Handler(BaseHTTPRequestHandler):
                 app = load_app()
                 admin_page = load_page("resources/views/auth/admin.html")
                 app = app.replace("^app^", admin_page)
-                blogs_template = "<ul>"
-                for blog in blogs:
-                    blogs_template += f"""
+
+                blogs_template = ""
+
+                if len(blogs) > 0:
+                    blogs_template = "<ul>"
+                    for blog in blogs:
+                        blogs_template += f"""
                                         <li>
                                             <a href="/blogs/{blog["id"]}">{blog["title"]}</a>
                                             <div class="action-buttons-container">
@@ -240,7 +243,9 @@ class Handler(BaseHTTPRequestHandler):
                                             </div>
                                         </li>
                                             """
-                blogs_template += "</ul>"
+                    blogs_template += "</ul>"
+                else:
+                    blogs_template += """<h2>No blogs to show</h2>"""
 
                 app = app.replace("^blogs^", blogs_template)
 

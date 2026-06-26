@@ -104,6 +104,10 @@ a {
   justify-content: space-between;
 }
 
+.admin-blogs h2 {
+  color: #999;
+}
+
 .edit {
   text-decoration: none;
 }
